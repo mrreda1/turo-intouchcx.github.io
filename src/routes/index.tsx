@@ -72,7 +72,7 @@ const LINKS: AppLink[] = [
     href: "https://intouch.nicecloudsvc.com/",
     icon: Headphones,
     group: "Systems",
-    blurb: "Contact center",
+    blurb: "Schedule planner",
   },
   {
     name: "Sidd",
@@ -86,7 +86,7 @@ const LINKS: AppLink[] = [
     href: "https://docs.google.com/document/d/1KBsw-ZyJhb3pVO8MN2kbA_5cZIhzwmhSO8peNADIeec/edit?usp=sharing",
     icon: ClipboardList,
     group: "Docs & Sheets",
-    blurb: "Escalation contacts doc",
+    blurb: "Knowledge docs",
   },
   {
     name: "Ticket Strategy",
@@ -100,14 +100,14 @@ const LINKS: AppLink[] = [
     href: "https://docs.google.com/spreadsheets/d/1YhP8uNxhqx5d53wB0YDlXIU811t6Lz8X-226t8-OmLY/edit?gid=0#gid=0",
     icon: Voicemail,
     group: "Docs & Sheets",
-    blurb: "Voicemail tracker",
+    blurb: "Assigned tickets",
   },
   {
     name: "Play Mode",
     href: "https://docs.google.com/spreadsheets/d/1XJ7kyRBvCHr0rxsAJ6V0OSHboK5ik9rKO5fqk_OM5g0/edit?gid=990526332#gid=990526332",
     icon: Gamepad2,
     group: "Docs & Sheets",
-    blurb: "Shift game sheet",
+    blurb: "Unassigned tickets",
   },
 ];
 
