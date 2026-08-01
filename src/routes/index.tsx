@@ -8,7 +8,8 @@ import {
   Headphones,
   KeyRound,
   MessageSquare,
-  Search,
+  Car,
+  CarTaxiFront,
   Sparkles,
   Table2,
   Voicemail,
@@ -37,12 +38,30 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+const REGIONS = ["AU", "UK", "US", "CA"] as const;
+type Region = (typeof REGIONS)[number];
+
+const REGION_LABEL: Record<Region, string> = {
+  AU: "Australia",
+  UK: "United Kingdom",
+  US: "United States",
+  CA: "Canada",
+};
+
 type AppLink = {
   name: string;
-  href: string;
+  href?: string | undefined;
   icon: LucideIcon;
   group: "Systems" | "Docs & Sheets";
   blurb: string;
+  regions?: Region[];
+};
+
+const GURU_LINKS: Record<Region, string | undefined> = {
+  AU: "https://docs.google.com/document/d/1KBsw-ZyJhb3pVO8MN2kbA_5cZIhzwmhSO8peNADIeec/edit?usp=sharing",
+  UK: undefined,
+  US: undefined,
+  CA: undefined,
 };
 
 const LINKS: AppLink[] = [
@@ -82,11 +101,18 @@ const LINKS: AppLink[] = [
     blurb: "Agent assist",
   },
   {
-    name: "AU Gurus",
-    href: "https://docs.google.com/document/d/1KBsw-ZyJhb3pVO8MN2kbA_5cZIhzwmhSO8peNADIeec/edit?usp=sharing",
-    icon: ClipboardList,
-    group: "Docs & Sheets",
-    blurb: "Knowledge docs",
+    name: "Uber",
+    href: undefined,
+    icon: Car,
+    group: "Systems",
+    blurb: "Customer gift cards",
+  },
+  {
+    name: "Lyft",
+    href: undefined,
+    icon: CarTaxiFront,
+    group: "Systems",
+    blurb: "Customer gift cards",
   },
   {
     name: "Ticket Strategy",
@@ -101,6 +127,7 @@ const LINKS: AppLink[] = [
     icon: Voicemail,
     group: "Docs & Sheets",
     blurb: "Assigned tickets",
+    regions: ["AU"],
   },
   {
     name: "Play Mode",
@@ -108,6 +135,7 @@ const LINKS: AppLink[] = [
     icon: Gamepad2,
     group: "Docs & Sheets",
     blurb: "Unassigned tickets",
+    regions: ["AU"],
   },
 ];
 
@@ -115,13 +143,8 @@ const GROUPS = ["Systems", "Docs & Sheets"] as const;
 
 function Tile({ link }: { link: AppLink }) {
   const Icon = link.icon;
-  return (
-    <a
-      href={link.href}
-      target="_blank"
-      rel="noreferrer noopener"
-      className="tile group relative flex flex-col gap-4 rounded-2xl border border-border p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
+  const inner = (
+    <>
       <span className="flex size-12 items-center justify-center rounded-xl bg-secondary text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
         <Icon size={22} strokeWidth={1.9} />
       </span>
@@ -129,6 +152,31 @@ function Tile({ link }: { link: AppLink }) {
         <span className="block text-base font-semibold text-card-foreground">{link.name}</span>
         <span className="mt-0.5 block text-xs text-muted-foreground">{link.blurb}</span>
       </span>
+    </>
+  );
+
+  if (!link.href) {
+    return (
+      <div
+        className="tile group relative flex cursor-not-allowed flex-col gap-4 rounded-2xl border border-dashed border-border p-5 opacity-60"
+        title="Link not set yet"
+      >
+        {inner}
+        <span className="absolute right-4 top-4 text-[0.625rem] uppercase tracking-wider text-muted-foreground">
+          Pending
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={link.href}
+      target="_blank"
+      rel="noreferrer noopener"
+      className="tile group relative flex flex-col gap-4 rounded-2xl border border-border p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {inner}
       <ArrowUpRight
         size={16}
         className="absolute right-4 top-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
@@ -138,15 +186,23 @@ function Tile({ link }: { link: AppLink }) {
 }
 
 function Index() {
-  const [query, setQuery] = useState("");
+  const [region, setRegion] = useState<Region>("AU");
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return LINKS;
-    return LINKS.filter(
-      (l) => l.name.toLowerCase().includes(q) || l.blurb.toLowerCase().includes(q),
-    );
-  }, [query]);
+  const regionLinks = useMemo<AppLink[]>(() => {
+    const guru: AppLink = {
+      name: `${region} Gurus`,
+      href: GURU_LINKS[region],
+      icon: ClipboardList,
+      group: "Docs & Sheets",
+      blurb: `${REGION_LABEL[region]} knowledge center`,
+    };
+    return [
+      ...LINKS.filter((l) => !l.regions || l.regions.includes(region)).slice(0, 5),
+      guru,
+      ...LINKS.filter((l) => !l.regions || l.regions.includes(region)).slice(5),
+    ];
+  }, [region]);
+
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl px-6 py-16">
@@ -161,24 +217,36 @@ function Index() {
           </p>
         </div>
 
-        <div className="relative w-full sm:w-64">
-          <Search
-            size={16}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search links…"
-            aria-label="Search links"
-            className="h-11 w-full rounded-xl border border-input bg-card pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
+        <div
+          role="tablist"
+          aria-label="Region"
+          className="inline-flex rounded-xl border border-input bg-card p-1"
+        >
+          {REGIONS.map((r) => (
+            <button
+              key={r}
+              type="button"
+              role="tab"
+              aria-selected={region === r}
+              onClick={() => setRegion(r)}
+              title={REGION_LABEL[r]}
+              className={
+                "rounded-lg px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+                (region === r
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground")
+              }
+            >
+              {r}
+            </button>
+          ))}
         </div>
+
       </header>
 
       <div className="mt-14 space-y-12">
         {GROUPS.map((group) => {
-          const items = filtered.filter((l) => l.group === group);
+          const items = regionLinks.filter((l) => l.group === group);
           if (items.length === 0) return null;
           return (
             <section key={group}>
@@ -197,12 +265,6 @@ function Index() {
             </section>
           );
         })}
-
-        {filtered.length === 0 && (
-          <p className="py-16 text-center text-sm text-muted-foreground">
-            No links match “{query}”.
-          </p>
-        )}
       </div>
     </main>
   );
